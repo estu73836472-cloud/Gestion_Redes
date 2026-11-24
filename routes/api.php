@@ -43,6 +43,7 @@ return function (App $app) {
         // HISTORIA DE USUARIO 3: Monitoreo en Tiempo Real
         // ==========================================
         $group->group('/monitoreo', function (RouteCollectorProxy $monGroup) {
+            $monGroup->get('', [MonitoreoApiController::class, 'index']);                       // Incremento 7: Historial
             $monGroup->post('/ping-all', [MonitoreoApiController::class, 'pingAll']);             // HU3: Ping a toda la red
             $monGroup->post('/ping/{id:[0-9]+}', [MonitoreoApiController::class, 'ping']);         // HU3: Ping a un equipo
             $monGroup->get('/historial', [MonitoreoApiController::class, 'historial']);            // Historial general reciente

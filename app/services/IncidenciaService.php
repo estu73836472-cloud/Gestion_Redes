@@ -61,10 +61,10 @@ class IncidenciaService
             throw new InvalidArgumentException("La descripción de la incidencia es obligatoria.");
         }
 
-        $gravedadesPermitidas = ['baja', 'media', 'alta', 'critica'];
+        $gravedadesPermitidas = ['baja', 'media', 'alta'];
         $gravedad = strtolower(trim($data['gravedad'] ?? 'media'));
         if (!in_array($gravedad, $gravedadesPermitidas, true)) {
-            $gravedad = 'media';
+            throw new InvalidArgumentException('La gravedad debe ser baja, media o alta.');
         }
         $data['gravedad'] = $gravedad;
 

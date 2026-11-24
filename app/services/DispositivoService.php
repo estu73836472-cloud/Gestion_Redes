@@ -70,6 +70,9 @@ class DispositivoService
         if (empty($data['estado'])) {
             $data['estado'] = $dispositivoActual['estado'];
         }
+        if (!array_key_exists('mac', $data)) {
+            $data['mac'] = $dispositivoActual['mac'];
+        }
 
         $this->repository->update($id, $data);
         return $this->repository->findById($id);

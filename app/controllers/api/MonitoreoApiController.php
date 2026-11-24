@@ -46,6 +46,25 @@ class MonitoreoApiController extends BaseApiController
     }
 
     /**
+     * Historial reciente de monitoreo
+     * GET /api/monitoreo
+     */
+    public function index(Request $request, Response $response): Response
+    {
+        try {
+            $params = $request->getQueryParams();
+            $limit = isset($params['limit']) ? filter_var($params['limit'], FILTER_VALIDATE_INT) : 50;
+            if ($limit === false || $limit < 1 || $limit > 200) {
+                return $this->error($response, 'El límite debe ser un entero entre 1 y 200.', 422);
+            }
+
+            return $this->json($response, $this->service->obtenerUltimosMonitoreos($limit));
+        } catch (Throwable $e) {
+            return $this->error($response, $e->getMessage(), 500);
+        }
+    }
+
+    /**
      * Historial general de monitoreo reciente
      * GET /api/monitoreo/historial
      */
@@ -53,7 +72,10 @@ class MonitoreoApiController extends BaseApiController
     {
         try {
             $params = $request->getQueryParams();
-            $limit = isset($params['limit']) ? (int)$params['limit'] : 20;
+            $limit = isset($params['limit']) ? filter_var($params['limit'], FILTER_VALIDATE_INT) : 20;
+            if ($limit === false || $limit < 1 || $limit > 200) {
+                return $this->error($response, 'El límite debe ser un entero entre 1 y 200.', 422);
+            }
             $historial = $this->service->obtenerUltimosMonitoreos($limit);
             return $this->json($response, $historial);
         } catch (Throwable $e) {

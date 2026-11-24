@@ -33,7 +33,7 @@ class WebController
     public function monitoreo(Request $request, Response $response): Response
     {
         return $this->render($response, 'monitoreo', [
-            'titulo' => 'Monitoreo en Tiempo Real de la Red'
+            'titulo' => 'Historial de Monitoreo'
         ]);
     }
 

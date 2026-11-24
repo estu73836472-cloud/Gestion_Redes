@@ -101,9 +101,9 @@ class IncidenciaRepository
     {
         $sql = "SELECT 
                     COUNT(*) as total,
-                    SUM(CASE WHEN estado = 'abierta' THEN 1 ELSE 0 END) as abiertas,
-                    SUM(CASE WHEN estado = 'en_proceso' THEN 1 ELSE 0 END) as en_proceso,
-                    SUM(CASE WHEN estado = 'resuelta' THEN 1 ELSE 0 END) as resueltas
+                    COALESCE(SUM(CASE WHEN estado = 'abierta' THEN 1 ELSE 0 END), 0) as abiertas,
+                    COALESCE(SUM(CASE WHEN estado = 'en_proceso' THEN 1 ELSE 0 END), 0) as en_proceso,
+                    COALESCE(SUM(CASE WHEN estado = 'resuelta' THEN 1 ELSE 0 END), 0) as resueltas
                 FROM incidencias";
         $stmt = $this->db->query($sql);
         return $stmt->fetch() ?: [

@@ -1,0 +1,276 @@
+{
+  "info": {
+    "name": "Gestion_Redes - Incrementos 1 a 7",
+    "description": "Pruebas secuenciales de los endpoints descritos en los incrementos 1 a 7.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000" },
+    { "key": "testIp", "value": "" },
+    { "key": "deviceId", "value": "" },
+    { "key": "incidentId", "value": "" },
+    { "key": "loopbackDeviceId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Incremento 1 - Listar dispositivos",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "Accept", "value": "application/json" }],
+        "url": { "raw": "{{baseUrl}}/api/dispositivos", "host": ["{{baseUrl}}"], "path": ["api", "dispositivos"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test('GET responde 200 y contiene al menos dos dispositivos', function () {",
+            "    pm.response.to.have.status(200);",
+            "    const body = pm.response.json();",
+            "    pm.expect(body.success).to.eql(true);",
+            "    pm.expect(body.data).to.be.an('array').with.lengthOf.at.least(2);",
+            "    const loopback = body.data.find((device) => device.ip === '127.0.0.1');",
+            "    pm.expect(loopback, 'Cargar database/seed_test_devices.sql antes de ejecutar la colección').to.exist;",
+            "    pm.collectionVariables.set('loopbackDeviceId', loopback.id);",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "Incremento 2 - Registrar dispositivo",
+      "event": [{
+        "listen": "prerequest",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "const ip = `10.250.${Math.floor(Math.random() * 250) + 1}.${Math.floor(Math.random() * 250) + 1}`;",
+            "pm.collectionVariables.set('testIp', ip);"
+          ]
+        }
+      }, {
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test('POST responde 201 y devuelve el dispositivo', function () {",
+            "    pm.response.to.have.status(201);",
+            "    const body = pm.response.json();",
+            "    pm.expect(body.success).to.eql(true);",
+            "    pm.expect(body.data.dispositivo).to.have.property('id');",
+            "    pm.collectionVariables.set('deviceId', body.data.dispositivo.id);",
+            "});"
+          ]
+        }
+      }],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Router de prueba Postman\",\n  \"ip\": \"{{testIp}}\",\n  \"tipo\": \"router\",\n  \"ubicacion\": \"Laboratorio\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/api/dispositivos", "host": ["{{baseUrl}}"], "path": ["api", "dispositivos"] }
+      }
+    },
+    {
+      "name": "Incremento 2 - Rechazar IP duplicada",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Duplicado\",\n  \"ip\": \"{{testIp}}\",\n  \"tipo\": \"router\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/api/dispositivos", "host": ["{{baseUrl}}"], "path": ["api", "dispositivos"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": ["pm.test('La IP duplicada responde 422', function () { pm.response.to.have.status(422); });"]
+        }
+      }]
+    },
+    {
+      "name": "Incremento 2 - Rechazar IP inválida",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"IP inválida\",\n  \"ip\": \"999.999.999.999\",\n  \"tipo\": \"router\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/api/dispositivos", "host": ["{{baseUrl}}"], "path": ["api", "dispositivos"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": ["pm.test('La IP inválida responde 422', function () { pm.response.to.have.status(422); });"]
+        }
+      }]
+    },
+    {
+      "name": "Incremento 3 - Actualizar dispositivo",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Router actualizado\",\n  \"ip\": \"{{testIp}}\",\n  \"tipo\": \"router\",\n  \"ubicacion\": \"Sala de redes\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/api/dispositivos/{{deviceId}}", "host": ["{{baseUrl}}"], "path": ["api", "dispositivos", "{{deviceId}}"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": ["pm.test('PUT responde 200', function () { pm.response.to.have.status(200); });"]
+        }
+      }]
+    },
+    {
+      "name": "Incremento 4 - Ping de IP local",
+      "request": {
+        "method": "POST",
+        "url": { "raw": "{{baseUrl}}/api/monitoreo/ping/{{loopbackDeviceId}}", "host": ["{{baseUrl}}"], "path": ["api", "monitoreo", "ping", "{{loopbackDeviceId}}"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test('Ping devuelve estado y latencia', function () {",
+            "    pm.response.to.have.status(200);",
+            "    const result = pm.response.json().data;",
+            "    pm.expect(result).to.have.property('estado');",
+            "    pm.expect(result).to.have.property('latencia_ms');",
+            "    pm.expect(result.estado).to.eql('en_linea');",
+            "    pm.expect(result.latencia_ms).to.be.a('number');",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "Incremento 4 - Ping de toda la red",
+      "request": {
+        "method": "POST",
+        "url": { "raw": "{{baseUrl}}/api/monitoreo/ping-all", "host": ["{{baseUrl}}"], "path": ["api", "monitoreo", "ping-all"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test('Ping-all devuelve un resumen', function () {",
+            "    pm.response.to.have.status(200);",
+            "    const result = pm.response.json().data;",
+            "    pm.expect(result).to.have.property('total_verificados');",
+            "    pm.expect(result.dispositivos).to.be.an('array');",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "Incremento 5 - Registrar incidencia",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"dispositivo_id\": \"{{deviceId}}\",\n  \"titulo\": \"Incidencia de prueba\",\n  \"descripcion\": \"Registro creado desde Postman\",\n  \"gravedad\": \"media\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/api/incidencias", "host": ["{{baseUrl}}"], "path": ["api", "incidencias"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test('POST incidencia responde 201', function () {",
+            "    pm.response.to.have.status(201);",
+            "    const body = pm.response.json();",
+            "    pm.collectionVariables.set('incidentId', body.data.incidencia.id);",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "Incremento 5 - Resolver incidencia",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"estado\": \"resuelta\" }",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": { "raw": "{{baseUrl}}/api/incidencias/{{incidentId}}/estado", "host": ["{{baseUrl}}"], "path": ["api", "incidencias", "{{incidentId}}", "estado"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": ["pm.test('PATCH de estado responde 200', function () { pm.response.to.have.status(200); });"]
+        }
+      }]
+    },
+    {
+      "name": "Incremento 6 - Métricas",
+      "item": [
+        {
+          "name": "Métricas de dispositivos",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/dispositivos/metricas", "host": ["{{baseUrl}}"], "path": ["api", "dispositivos", "metricas"] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Métricas de dispositivos responden 200', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().data).to.have.property('total'); });"] } }]
+        },
+        {
+          "name": "Métricas de incidencias",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/api/incidencias/metricas", "host": ["{{baseUrl}}"], "path": ["api", "incidencias", "metricas"] } },
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["pm.test('Métricas de incidencias responden 200', function () { pm.response.to.have.status(200); pm.expect(pm.response.json().data).to.have.property('abiertas'); });"] } }]
+        }
+      ]
+    },
+    {
+      "name": "Incremento 7 - Historial de monitoreo",
+      "request": {
+        "method": "GET",
+        "url": { "raw": "{{baseUrl}}/api/monitoreo", "host": ["{{baseUrl}}"], "path": ["api", "monitoreo"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [
+            "pm.test('Historial responde con un array JSON', function () {",
+            "    pm.response.to.have.status(200);",
+            "    pm.expect(pm.response.json().data).to.be.an('array');",
+            "});"
+          ]
+        }
+      }]
+    },
+    {
+      "name": "Incremento 3 - Eliminar dispositivo de prueba",
+      "request": {
+        "method": "DELETE",
+        "url": { "raw": "{{baseUrl}}/api/dispositivos/{{deviceId}}", "host": ["{{baseUrl}}"], "path": ["api", "dispositivos", "{{deviceId}}"] }
+      },
+      "event": [{
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": ["pm.test('DELETE responde 200', function () { pm.response.to.have.status(200); });"]
+        }
+      }]
+    }
+  ]
+}

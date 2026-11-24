@@ -103,10 +103,10 @@ class DispositivoRepository
     {
         $sql = "SELECT 
                     COUNT(*) as total,
-                    SUM(CASE WHEN estado = 'en_linea' THEN 1 ELSE 0 END) as en_linea,
-                    SUM(CASE WHEN estado = 'fuera_de_linea' THEN 1 ELSE 0 END) as fuera_de_linea,
-                    SUM(CASE WHEN estado = 'advertencia' THEN 1 ELSE 0 END) as advertencia,
-                    SUM(CASE WHEN estado = 'desconocido' THEN 1 ELSE 0 END) as desconocido
+                    COALESCE(SUM(CASE WHEN estado = 'en_linea' THEN 1 ELSE 0 END), 0) as en_linea,
+                    COALESCE(SUM(CASE WHEN estado = 'fuera_de_linea' THEN 1 ELSE 0 END), 0) as fuera_de_linea,
+                    COALESCE(SUM(CASE WHEN estado = 'advertencia' THEN 1 ELSE 0 END), 0) as advertencia,
+                    COALESCE(SUM(CASE WHEN estado = 'desconocido' THEN 1 ELSE 0 END), 0) as desconocido
                 FROM dispositivos";
         $stmt = $this->db->query($sql);
         return $stmt->fetch() ?: [

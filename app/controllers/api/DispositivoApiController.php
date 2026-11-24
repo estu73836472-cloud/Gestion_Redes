@@ -3,17 +3,18 @@
 namespace App\Controllers\Api;
 
 use App\Services\DispositivoService;
+use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Throwable;
 
 class DispositivoApiController extends BaseApiController
 {
-    private DispositivoService $service;
+    private ?DispositivoService $service;
 
     public function __construct(?DispositivoService $service = null)
     {
-        $this->service = $service ?? new DispositivoService();
+        $this->service = $service;
     }
 
     /**
@@ -23,7 +24,7 @@ class DispositivoApiController extends BaseApiController
     public function index(Request $request, Response $response): Response
     {
         try {
-            $dispositivos = $this->service->obtenerTodos();
+            $dispositivos = $this->service()->obtenerTodos();
             return $this->json($response, $dispositivos);
         } catch (Throwable $e) {
             return $this->error($response, $e->getMessage(), 500);
@@ -38,7 +39,7 @@ class DispositivoApiController extends BaseApiController
     {
         try {
             $id = (int)$args['id'];
-            $dispositivo = $this->service->obtenerPorId($id);
+            $dispositivo = $this->service()->obtenerPorId($id);
             return $this->json($response, $dispositivo);
         } catch (Throwable $e) {
             return $this->error($response, $e->getMessage(), 404);
@@ -53,13 +54,15 @@ class DispositivoApiController extends BaseApiController
     {
         try {
             $data = (array)($request->getParsedBody() ?? []);
-            $nuevo = $this->service->registrar($data);
+            $nuevo = $this->service()->registrar($data);
             return $this->json($response, [
                 'mensaje' => 'Dispositivo registrado con éxito.',
                 'dispositivo' => $nuevo
             ], 201);
-        } catch (Throwable $e) {
+        } catch (InvalidArgumentException $e) {
             return $this->error($response, $e->getMessage(), 422);
+        } catch (Throwable $e) {
+            return $this->error($response, 'No fue posible registrar el dispositivo. Verifica la conexión con la base de datos.', 500);
         }
     }
 
@@ -72,7 +75,7 @@ class DispositivoApiController extends BaseApiController
         try {
             $id = (int)$args['id'];
             $data = (array)($request->getParsedBody() ?? []);
-            $actualizado = $this->service->actualizar($id, $data);
+            $actualizado = $this->service()->actualizar($id, $data);
             return $this->json($response, [
                 'mensaje' => 'Dispositivo actualizado con éxito.',
                 'dispositivo' => $actualizado
@@ -90,7 +93,7 @@ class DispositivoApiController extends BaseApiController
     {
         try {
             $id = (int)$args['id'];
-            $this->service->eliminar($id);
+            $this->service()->eliminar($id);
             return $this->json($response, [
                 'mensaje' => "Dispositivo con ID {$id} eliminado correctamente."
             ], 200);
@@ -106,10 +109,15 @@ class DispositivoApiController extends BaseApiController
     public function metrics(Request $request, Response $response): Response
     {
         try {
-            $metricas = $this->service->obtenerMetricas();
+            $metricas = $this->service()->obtenerMetricas();
             return $this->json($response, $metricas);
         } catch (Throwable $e) {
             return $this->error($response, $e->getMessage(), 500);
         }
+    }
+
+    private function service(): DispositivoService
+    {
+        return $this->service ??= new DispositivoService();
     }
 }

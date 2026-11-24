@@ -7,21 +7,21 @@ use InvalidArgumentException;
 
 class DispositivoService
 {
-    private DispositivoRepository $repository;
+    private ?DispositivoRepository $repository;
 
     public function __construct(?DispositivoRepository $repository = null)
     {
-        $this->repository = $repository ?? new DispositivoRepository();
+        $this->repository = $repository;
     }
 
     public function obtenerTodos(): array
     {
-        return $this->repository->findAll();
+        return $this->repository()->findAll();
     }
 
     public function obtenerPorId(int $id): ?array
     {
-        $dispositivo = $this->repository->findById($id);
+        $dispositivo = $this->repository()->findById($id);
         if (!$dispositivo) {
             throw new InvalidArgumentException("El dispositivo con ID {$id} no fue encontrado.");
         }
@@ -36,7 +36,8 @@ class DispositivoService
         $this->validarDatos($data);
 
         // Validar unicidad de IP
-        $existente = $this->repository->findByIp($data['ip']);
+        $repository = $this->repository();
+        $existente = $repository->findByIp($data['ip']);
         if ($existente) {
             throw new InvalidArgumentException("La dirección IP '{$data['ip']}' ya está asignada al dispositivo '{$existente['nombre']}'.");
         }
@@ -46,8 +47,8 @@ class DispositivoService
             $data['estado'] = 'desconocido';
         }
 
-        $id = $this->repository->create($data);
-        return $this->repository->findById($id);
+        $id = $repository->create($data);
+        return $repository->findById($id);
     }
 
     /**
@@ -59,8 +60,9 @@ class DispositivoService
         $this->validarDatos($data);
 
         // Si la IP cambió, verificar que la nueva IP no esté tomada por otro dispositivo
+        $repository = $this->repository();
         if ($data['ip'] !== $dispositivoActual['ip']) {
-            $existente = $this->repository->findByIp($data['ip']);
+            $existente = $repository->findByIp($data['ip']);
             if ($existente && (int)$existente['id'] !== $id) {
                 throw new InvalidArgumentException("La dirección IP '{$data['ip']}' ya está en uso por otro dispositivo.");
             }
@@ -71,19 +73,24 @@ class DispositivoService
             $data['estado'] = $dispositivoActual['estado'];
         }
 
-        $this->repository->update($id, $data);
-        return $this->repository->findById($id);
+        $repository->update($id, $data);
+        return $repository->findById($id);
     }
 
     public function eliminar(int $id): bool
     {
         $this->obtenerPorId($id);
-        return $this->repository->delete($id);
+        return $this->repository()->delete($id);
     }
 
     public function obtenerMetricas(): array
     {
-        return $this->repository->getMetricas();
+        return $this->repository()->getMetricas();
+    }
+
+    private function repository(): DispositivoRepository
+    {
+        return $this->repository ??= new DispositivoRepository();
     }
 
     private function validarDatos(array $data): void

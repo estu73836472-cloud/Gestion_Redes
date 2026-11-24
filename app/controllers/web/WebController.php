@@ -2,8 +2,11 @@
 
 namespace App\Controllers\Web;
 
+use App\Services\DispositivoService;
+use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Throwable;
 
 class WebController
 {
@@ -27,6 +30,37 @@ class WebController
         ]);
     }
 
+    public function nuevoDispositivo(Request $request, Response $response): Response
+    {
+        return $this->render($response, 'formulario-dispositivo', [
+            'titulo' => 'Registrar dispositivo',
+            'dispositivo' => null
+        ]);
+    }
+
+    public function editarDispositivo(Request $request, Response $response, array $args): Response
+    {
+        return $this->renderFormularioDispositivo($response, (int)$args['id']);
+    }
+
+    public function detalleDispositivo(Request $request, Response $response, array $args): Response
+    {
+        try {
+            $dispositivo = (new DispositivoService())->obtenerPorId((int)$args['id']);
+        } catch (InvalidArgumentException $e) {
+            $response->getBody()->write('El dispositivo solicitado no existe.');
+            return $response->withStatus(404);
+        } catch (Throwable $e) {
+            $response->getBody()->write('No fue posible cargar el dispositivo. Verifica la conexión con la base de datos.');
+            return $response->withStatus(503);
+        }
+
+        return $this->render($response, 'detalle-dispositivo', [
+            'titulo' => $dispositivo['nombre'],
+            'dispositivo' => $dispositivo
+        ]);
+    }
+
     /**
      * Vista para HU3: Monitoreo en Tiempo Real
      */
@@ -44,6 +78,24 @@ class WebController
     {
         return $this->render($response, 'incidencias', [
             'titulo' => 'Registro de Incidencias'
+        ]);
+    }
+
+    private function renderFormularioDispositivo(Response $response, int $id): Response
+    {
+        try {
+            $dispositivo = (new DispositivoService())->obtenerPorId($id);
+        } catch (InvalidArgumentException $e) {
+            $response->getBody()->write('El dispositivo solicitado no existe.');
+            return $response->withStatus(404);
+        } catch (Throwable $e) {
+            $response->getBody()->write('No fue posible cargar el dispositivo. Verifica la conexión con la base de datos.');
+            return $response->withStatus(503);
+        }
+
+        return $this->render($response, 'formulario-dispositivo', [
+            'titulo' => 'Editar dispositivo',
+            'dispositivo' => $dispositivo
         ]);
     }
 

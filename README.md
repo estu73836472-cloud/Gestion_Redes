@@ -102,7 +102,21 @@ Sistema_Gestion_Redes/
 
 ## 💻 Puesta en Marcha
 
-### 1. Iniciar el Servidor de Desarrollo
+### 1. Preparar la Base de Datos
+
+Inicia MySQL desde XAMPP e importa `database/schema.sql` con phpMyAdmin o ejecuta el script desde el cliente MySQL. El esquema crea la base `gestion_redes` y las tablas para dispositivos, incidencias y monitoreos.
+
+Revisa `.env.example` y, si usas credenciales o puerto distintos, crea un archivo `.env` en la raíz y actualiza `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` y `DB_PASS`.
+
+### 2. Instalar dependencias
+
+Desde la raíz del proyecto ejecuta:
+
+```bash
+php composer.phar install
+```
+
+### 3. Iniciar el Servidor de Desarrollo
 Puedes usar el servidor integrado de PHP apuntando a la carpeta `public`:
 
 ```bash

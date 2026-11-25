@@ -1,5 +1,18 @@
 <?php
 $titulo = $titulo ?? 'Gestión de Redes';
+$rutaActual = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+$seccionActiva = match ($rutaActual) {
+    '/dispositivos' => 'dispositivos',
+    '/monitoreo' => 'monitoreo',
+    '/incidencias' => 'incidencias',
+    default => 'dashboard',
+};
+$enlacesNavegacion = [
+    ['id' => 'dashboard', 'href' => '/', 'icono' => 'bi-grid-1x2', 'texto' => 'Inicio'],
+    ['id' => 'dispositivos', 'href' => '/dispositivos', 'icono' => 'bi-hdd-network', 'texto' => 'Dispositivos'],
+    ['id' => 'monitoreo', 'href' => '/monitoreo', 'icono' => 'bi-activity', 'texto' => 'Monitoreo'],
+    ['id' => 'incidencias', 'href' => '/incidencias', 'icono' => 'bi-exclamation-triangle', 'texto' => 'Incidencias'],
+];
 ?>
 <!doctype html>
 <html lang="es">
@@ -11,22 +24,64 @@ $titulo = $titulo ?? 'Gestión de Redes';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link href="/assets/css/app.css" rel="stylesheet">
 </head>
-<body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-secondary">
-    <div class="container">
-        <a class="navbar-brand fw-semibold" href="/">Gestión de Redes</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavigation" aria-controls="mainNavigation" aria-expanded="false" aria-label="Abrir navegación">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="mainNavigation">
-            <div class="navbar-nav me-auto">
-                <a class="nav-link" href="/">Dashboard</a>
-                <a class="nav-link" href="/dispositivos">Dispositivos</a>
-                <a class="nav-link" href="/incidencias">Incidencias</a>
-                <a class="nav-link" href="/monitoreo">Monitoreo</a>
+<body class="app-body">
+<div class="context-strip">
+    <span><strong>GESTIÓN DE REDES</strong><span class="context-separator">/</span> CONSOLA DE OPERACIÓN</span>
+    <span class="context-environment">ENTORNO LOCAL <span class="environment-dot"></span> ACTIVO</span>
+</div>
+
+<div class="app-shell">
+    <aside class="app-sidebar" id="appSidebar" aria-label="Navegación principal">
+        <a class="sidebar-brand" href="/" aria-label="Gestión de Redes, inicio">
+            <span class="brand-mark"><i class="bi bi-diagram-3-fill" aria-hidden="true"></i></span>
+            <span class="brand-copy"><strong>Redes</strong><small>CONSOLE</small></span>
+        </a>
+
+        <div class="sidebar-caption">ESPACIO DE TRABAJO</div>
+        <nav class="sidebar-navigation">
+            <?php foreach ($enlacesNavegacion as $enlace): ?>
+                <a class="sidebar-link<?= $seccionActiva === $enlace['id'] ? ' active' : '' ?>"
+                   href="<?= htmlspecialchars($enlace['href'], ENT_QUOTES, 'UTF-8') ?>"
+                   <?= $seccionActiva === $enlace['id'] ? 'aria-current="page"' : '' ?>
+                   title="<?= htmlspecialchars($enlace['texto'], ENT_QUOTES, 'UTF-8') ?>">
+                    <i class="bi <?= htmlspecialchars($enlace['icono'], ENT_QUOTES, 'UTF-8') ?>" aria-hidden="true"></i>
+                    <span><?= htmlspecialchars($enlace['texto'], ENT_QUOTES, 'UTF-8') ?></span>
+                </a>
+            <?php endforeach; ?>
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="sidebar-network">
+                <span class="network-icon"><i class="bi bi-diagram-3" aria-hidden="true"></i></span>
+                <span><strong>Red corporativa</strong><small>Panel de administración</small></span>
             </div>
-            <span id="apiHealthBadge" class="badge text-bg-secondary" role="status">Comprobando API...</span>
+            <div class="sidebar-version">GESTIÓN DE INFRAESTRUCTURA <span>v1.0</span></div>
         </div>
-    </div>
-</nav>
-<main class="container py-4">
+    </aside>
+
+    <button class="sidebar-backdrop" id="sidebarBackdrop" type="button" aria-label="Cerrar menú"></button>
+
+    <div class="workspace">
+        <header class="workspace-topbar">
+            <div class="topbar-leading">
+                <button class="sidebar-toggle" id="sidebarToggle" type="button"
+                        aria-label="Contraer menú" aria-controls="appSidebar" aria-expanded="true">
+                    <i class="bi bi-layout-sidebar-inset" aria-hidden="true"></i>
+                </button>
+                <div class="workspace-location">
+                    <span>Espacio de trabajo</span>
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                    <strong>Red principal</strong>
+                </div>
+            </div>
+            <div class="topbar-trailing">
+                <span id="apiHealthBadge" class="badge text-bg-secondary" role="status">Comprobando API...</span>
+                <span class="topbar-divider" aria-hidden="true"></span>
+                <div class="user-summary">
+                    <span class="user-avatar">AM</span>
+                    <span class="user-copy"><strong>Administrador</strong><small>Red local</small></span>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">

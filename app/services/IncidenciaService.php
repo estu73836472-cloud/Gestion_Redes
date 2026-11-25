@@ -24,7 +24,7 @@ class IncidenciaService
         return $this->incidenciaRepo->findAll();
     }
 
-    public function obtenerPorId(int $id): ?array
+    public function obtenerPorId(string $id): ?array
     {
         $incidencia = $this->incidenciaRepo->findById($id);
         if (!$incidencia) {
@@ -33,7 +33,7 @@ class IncidenciaService
         return $incidencia;
     }
 
-    public function obtenerPorDispositivo(int $dispositivoId): array
+    public function obtenerPorDispositivo(string $dispositivoId): array
     {
         return $this->incidenciaRepo->findPorDispositivo($dispositivoId);
     }
@@ -47,7 +47,7 @@ class IncidenciaService
             throw new InvalidArgumentException("Debe seleccionar un dispositivo afectado.");
         }
 
-        $dispId = (int)$data['dispositivo_id'];
+        $dispId = (string)$data['dispositivo_id'];
         $dispositivo = $this->dispositivoRepo->findById($dispId);
         if (!$dispositivo) {
             throw new InvalidArgumentException("El dispositivo seleccionado (ID: {$dispId}) no existe.");
@@ -61,10 +61,10 @@ class IncidenciaService
             throw new InvalidArgumentException("La descripción de la incidencia es obligatoria.");
         }
 
-        $gravedadesPermitidas = ['baja', 'media', 'alta', 'critica'];
+        $gravedadesPermitidas = ['baja', 'media', 'alta'];
         $gravedad = strtolower(trim($data['gravedad'] ?? 'media'));
         if (!in_array($gravedad, $gravedadesPermitidas, true)) {
-            $gravedad = 'media';
+            throw new InvalidArgumentException('La gravedad debe ser baja, media o alta.');
         }
         $data['gravedad'] = $gravedad;
 
@@ -76,7 +76,7 @@ class IncidenciaService
         return $this->incidenciaRepo->findById($id);
     }
 
-    public function actualizarEstado(int $id, string $estado): array
+    public function actualizarEstado(string $id, string $estado): array
     {
         $this->obtenerPorId($id);
 

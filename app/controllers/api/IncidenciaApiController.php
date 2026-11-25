@@ -37,7 +37,7 @@ class IncidenciaApiController extends BaseApiController
     public function show(Request $request, Response $response, array $args): Response
     {
         try {
-            $id = (int)$args['id'];
+            $id = (string)$args['id'];
             $incidencia = $this->service->obtenerPorId($id);
             return $this->json($response, $incidencia);
         } catch (Throwable $e) {
@@ -70,7 +70,7 @@ class IncidenciaApiController extends BaseApiController
     public function cambiarEstado(Request $request, Response $response, array $args): Response
     {
         try {
-            $id = (int)$args['id'];
+            $id = (string)$args['id'];
             $body = (array)($request->getParsedBody() ?? []);
             $nuevoEstado = $body['estado'] ?? '';
             $actualizada = $this->service->actualizarEstado($id, $nuevoEstado);
@@ -91,7 +91,7 @@ class IncidenciaApiController extends BaseApiController
     public function porDispositivo(Request $request, Response $response, array $args): Response
     {
         try {
-            $dispositivoId = (int)$args['id'];
+            $dispositivoId = (string)$args['id'];
             $incidencias = $this->service->obtenerPorDispositivo($dispositivoId);
             return $this->json($response, $incidencias);
         } catch (Throwable $e) {

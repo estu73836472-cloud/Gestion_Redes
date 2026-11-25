@@ -19,7 +19,7 @@ class DispositivoService
         return $this->repository->findAll();
     }
 
-    public function obtenerPorId(int $id): ?array
+    public function obtenerPorId(string $id): ?array
     {
         $dispositivo = $this->repository->findById($id);
         if (!$dispositivo) {
@@ -53,7 +53,7 @@ class DispositivoService
     /**
      * HU2: Actualizar Dispositivo
      */
-    public function actualizar(int $id, array $data): array
+    public function actualizar(string $id, array $data): array
     {
         $dispositivoActual = $this->obtenerPorId($id);
         $this->validarDatos($data);
@@ -61,7 +61,7 @@ class DispositivoService
         // Si la IP cambió, verificar que la nueva IP no esté tomada por otro dispositivo
         if ($data['ip'] !== $dispositivoActual['ip']) {
             $existente = $this->repository->findByIp($data['ip']);
-            if ($existente && (int)$existente['id'] !== $id) {
+            if ($existente && (string)$existente['id'] !== (string)$id) {
                 throw new InvalidArgumentException("La dirección IP '{$data['ip']}' ya está en uso por otro dispositivo.");
             }
         }
@@ -70,12 +70,15 @@ class DispositivoService
         if (empty($data['estado'])) {
             $data['estado'] = $dispositivoActual['estado'];
         }
+        if (!array_key_exists('mac', $data)) {
+            $data['mac'] = $dispositivoActual['mac'];
+        }
 
         $this->repository->update($id, $data);
         return $this->repository->findById($id);
     }
 
-    public function eliminar(int $id): bool
+    public function eliminar(string $id): bool
     {
         $this->obtenerPorId($id);
         return $this->repository->delete($id);

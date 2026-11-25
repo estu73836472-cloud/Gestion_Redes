@@ -5,6 +5,7 @@
 # Variables de entorno y credenciales
 .env
 .env.*
+plan_tareas.txt
 
 # Permitir la plantilla de configuración
 !.env.example

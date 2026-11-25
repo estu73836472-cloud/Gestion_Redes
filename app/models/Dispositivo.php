@@ -4,7 +4,7 @@ namespace App\Models;
 
 class Dispositivo
 {
-    public ?int $id;
+    public ?string $id;
     public string $nombre;
     public string $ip;
     public ?string $mac;
@@ -17,7 +17,7 @@ class Dispositivo
 
     public function __construct(array $data = [])
     {
-        $this->id = isset($data['id']) ? (int)$data['id'] : null;
+        $this->id = isset($data['id']) ? (string)$data['id'] : null;
         $this->nombre = trim($data['nombre'] ?? '');
         $this->ip = trim($data['ip'] ?? '');
         $this->mac = !empty($data['mac']) ? trim($data['mac']) : null;

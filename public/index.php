@@ -24,6 +24,13 @@ if (file_exists(__DIR__ . '/../.env')) {
 // Crear la instancia de la aplicación Slim 4
 $app = AppFactory::create();
 
+// Detectar y configurar el BasePath automáticamente (para entornos como XAMPP)
+$scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+$basePath = rtrim($scriptDir, '/');
+if (!empty($basePath)) {
+    $app->setBasePath($basePath);
+}
+
 // Middleware para parsear cuerpos de peticiones JSON y formularios (POST / PUT)
 $app->addBodyParsingMiddleware();
 

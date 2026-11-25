@@ -1,10 +1,5 @@
-/**
- * Funciones de utilidad comunes para la interfaz web y consumo de la API REST
- */
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str)
+function escapeHtml(value) {
+    return String(value ?? '')
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -12,66 +7,113 @@ function escapeHtml(str) {
         .replace(/'/g, '&#039;');
 }
 
-function badgeEstado(estado) {
-    switch (estado) {
-        case 'en_linea':
-            return '<span class="badge bg-success"><i class="bi bi-circle-fill me-1 small"></i> En Línea</span>';
-        case 'fuera_de_linea':
-            return '<span class="badge bg-danger"><i class="bi bi-circle-fill me-1 small"></i> Fuera de Línea</span>';
-        case 'advertencia':
-            return '<span class="badge bg-warning text-dark"><i class="bi bi-exclamation-circle-fill me-1 small"></i> Advertencia</span>';
-        default:
-            return '<span class="badge bg-secondary"><i class="bi bi-question-circle me-1 small"></i> Desconocido</span>';
+async function apiRequest(url, options = {}) {
+    const fullUrl = (url.startsWith('/') && window.BASE_URL) ? `${window.BASE_URL}${url}` : url;
+    const requestOptions = { ...options };
+    requestOptions.headers = {
+        Accept: 'application/json',
+        ...(options.headers || {})
+    };
+
+    if (options.body && typeof options.body !== 'string') {
+        requestOptions.headers['Content-Type'] = 'application/json';
+        requestOptions.body = JSON.stringify(options.body);
     }
+
+    let response;
+    try {
+        response = await fetch(fullUrl, requestOptions);
+    } catch (error) {
+        throw new Error('No fue posible conectar con la API. Verifica que el servidor esté activo.');
+    }
+
+    let payload;
+    try {
+        payload = await response.json();
+    } catch (error) {
+        throw new Error('La API devolvió una respuesta que no es JSON válido.');
+    }
+
+    if (!response.ok || payload.success === false) {
+        throw new Error(payload.message || `La solicitud falló (${response.status}).`);
+    }
+
+    return payload.data;
+}
+
+function showAlert(containerId, type, message) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.replaceChildren();
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.setAttribute('role', type === 'danger' ? 'alert' : 'status');
+    alert.append(document.createTextNode(message));
+
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'btn-close';
+    close.setAttribute('data-bs-dismiss', 'alert');
+    close.setAttribute('aria-label', 'Cerrar');
+    alert.append(close);
+    container.append(alert);
+}
+
+function badgeEstado(estado) {
+    const labels = {
+        en_linea: ['success', 'En línea'],
+        fuera_de_linea: ['danger', 'Fuera de línea'],
+        advertencia: ['warning text-dark', 'Advertencia'],
+        desconocido: ['secondary', 'Desconocido']
+    };
+    const [style, label] = labels[estado] || labels.desconocido;
+    return `<span class="badge bg-${style}">${label}</span>`;
 }
 
 function badgeGravedadClass(gravedad) {
-    switch (gravedad) {
-        case 'critica':
-            return 'bg-danger';
-        case 'alta':
-            return 'bg-warning text-dark';
-        case 'media':
-            return 'bg-primary';
-        case 'baja':
-            return 'bg-secondary';
-        default:
-            return 'bg-light text-dark';
-    }
+    const classes = {
+        baja: 'secondary',
+        media: 'primary',
+        alta: 'danger'
+    };
+    return classes[gravedad] || 'secondary';
 }
 
 function badgeEstadoIncidencia(estado) {
-    switch (estado) {
-        case 'abierta':
-            return '<span class="badge bg-danger">Abierta</span>';
-        case 'en_proceso':
-            return '<span class="badge bg-warning text-dark">En Proceso</span>';
-        case 'resuelta':
-            return '<span class="badge bg-success">Resuelta</span>';
-        default:
-            return `<span class="badge bg-secondary">${estado}</span>`;
-    }
+    const statuses = {
+        abierta: ['danger', 'Abierta'],
+        en_proceso: ['warning text-dark', 'En proceso'],
+        resuelta: ['success', 'Resuelta']
+    };
+    const [style, label] = statuses[estado] || ['secondary', 'Desconocido'];
+    return `<span class="badge bg-${style}">${label}</span>`;
 }
 
-// Verificación automática de salud de la API
+function formatDateTime(value) {
+    if (!value) return '—';
+    const date = new Date(String(value).replace(' ', 'T'));
+    return Number.isNaN(date.getTime()) ? escapeHtml(value) : escapeHtml(date.toLocaleString('es'));
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     const healthBadge = document.getElementById('apiHealthBadge');
     if (!healthBadge) return;
 
     try {
-        const res = await fetch('/api/health');
-        const data = await res.json();
-
-        if (data.status === 'online' && data.database && data.database.connected) {
-            healthBadge.className = 'badge bg-success';
-            healthBadge.innerHTML = `<i class="bi bi-check-circle me-1"></i> API y DB Conectada`;
+        const healthUrl = (window.BASE_URL ? window.BASE_URL : '') + '/api/health';
+        const response = await fetch(healthUrl, { headers: { Accept: 'application/json' } });
+        const data = await response.json();
+        if (response.ok && data.status === 'online' && data.database?.connected) {
+            healthBadge.className = 'badge text-bg-success';
+            healthBadge.textContent = 'API y base de datos conectadas';
         } else {
-            healthBadge.className = 'badge bg-warning text-dark';
-            healthBadge.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i> DB Desconectada`;
-            healthBadge.title = data.database?.message || 'Revise credenciales en .env';
+            healthBadge.className = 'badge text-bg-warning';
+            healthBadge.textContent = 'Base de datos desconectada';
+            healthBadge.title = data.database?.message || 'Revisa la configuración de la base de datos.';
         }
-    } catch (e) {
-        healthBadge.className = 'badge bg-danger';
-        healthBadge.innerHTML = `<i class="bi bi-x-circle me-1"></i> API Inalcanzable`;
+    } catch (error) {
+        healthBadge.className = 'badge text-bg-danger';
+        healthBadge.textContent = 'API no disponible';
     }
 });

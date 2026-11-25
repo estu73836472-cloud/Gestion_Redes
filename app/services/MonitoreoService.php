@@ -22,7 +22,7 @@ class MonitoreoService
     /**
      * HU3: Monitoreo en tiempo real de un dispositivo individual
      */
-    public function pingDispositivo(int $id): array
+    public function pingDispositivo(string $id): array
     {
         $dispositivo = $this->dispositivoRepo->findById($id);
         if (!$dispositivo) {
@@ -62,7 +62,7 @@ class MonitoreoService
         $resultados = [];
 
         foreach ($dispositivos as $disp) {
-            $resultados[] = $this->pingDispositivo((int)$disp['id']);
+            $resultados[] = $this->pingDispositivo((string)$disp['id']);
         }
 
         return [
@@ -77,7 +77,7 @@ class MonitoreoService
         return $this->monitoreoRepo->findUltimos($limit);
     }
 
-    public function obtenerHistorialDispositivo(int $dispositivoId, int $limit = 10): array
+    public function obtenerHistorialDispositivo(string $dispositivoId, int $limit = 10): array
     {
         return $this->monitoreoRepo->findPorDispositivo($dispositivoId, $limit);
     }

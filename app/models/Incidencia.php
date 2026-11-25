@@ -4,8 +4,8 @@ namespace App\Models;
 
 class Incidencia
 {
-    public ?int $id;
-    public int $dispositivo_id;
+    public ?string $id;
+    public string $dispositivo_id;
     public string $titulo;
     public string $descripcion;
     public string $gravedad;
@@ -15,8 +15,8 @@ class Incidencia
 
     public function __construct(array $data = [])
     {
-        $this->id = isset($data['id']) ? (int)$data['id'] : null;
-        $this->dispositivo_id = (int)($data['dispositivo_id'] ?? 0);
+        $this->id = isset($data['id']) ? (string)$data['id'] : null;
+        $this->dispositivo_id = (string)($data['dispositivo_id'] ?? '');
         $this->titulo = trim($data['titulo'] ?? '');
         $this->descripcion = trim($data['descripcion'] ?? '');
         $this->gravedad = $data['gravedad'] ?? 'media';

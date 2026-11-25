@@ -8,6 +8,7 @@ function escapeHtml(value) {
 }
 
 async function apiRequest(url, options = {}) {
+    const fullUrl = (url.startsWith('/') && window.BASE_URL) ? `${window.BASE_URL}${url}` : url;
     const requestOptions = { ...options };
     requestOptions.headers = {
         Accept: 'application/json',
@@ -21,7 +22,7 @@ async function apiRequest(url, options = {}) {
 
     let response;
     try {
-        response = await fetch(url, requestOptions);
+        response = await fetch(fullUrl, requestOptions);
     } catch (error) {
         throw new Error('No fue posible conectar con la API. Verifica que el servidor esté activo.');
     }
@@ -100,7 +101,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (!healthBadge) return;
 
     try {
-        const response = await fetch('/api/health', { headers: { Accept: 'application/json' } });
+        const healthUrl = (window.BASE_URL ? window.BASE_URL : '') + '/api/health';
+        const response = await fetch(healthUrl, { headers: { Accept: 'application/json' } });
         const data = await response.json();
         if (response.ok && data.status === 'online' && data.database?.connected) {
             healthBadge.className = 'badge text-bg-success';

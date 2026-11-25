@@ -37,7 +37,7 @@ class MonitoreoApiController extends BaseApiController
     public function ping(Request $request, Response $response, array $args): Response
     {
         try {
-            $id = (int)$args['id'];
+            $id = (string)$args['id'];
             $resultado = $this->service->pingDispositivo($id);
             return $this->json($response, $resultado);
         } catch (Throwable $e) {
@@ -90,7 +90,7 @@ class MonitoreoApiController extends BaseApiController
     public function historialDispositivo(Request $request, Response $response, array $args): Response
     {
         try {
-            $id = (int)$args['id'];
+            $id = (string)$args['id'];
             $historial = $this->service->obtenerHistorialDispositivo($id);
             return $this->json($response, $historial);
         } catch (Throwable $e) {

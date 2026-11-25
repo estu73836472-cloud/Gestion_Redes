@@ -4,8 +4,8 @@ namespace App\Models;
 
 class Monitoreo
 {
-    public ?int $id;
-    public int $dispositivo_id;
+    public ?string $id;
+    public string $dispositivo_id;
     public string $estado;
     public ?int $latencia_ms;
     public ?string $detalles;
@@ -15,8 +15,8 @@ class Monitoreo
 
     public function __construct(array $data = [])
     {
-        $this->id = isset($data['id']) ? (int)$data['id'] : null;
-        $this->dispositivo_id = (int)($data['dispositivo_id'] ?? 0);
+        $this->id = isset($data['id']) ? (string)$data['id'] : null;
+        $this->dispositivo_id = (string)($data['dispositivo_id'] ?? '');
         $this->estado = $data['estado'] ?? 'desconocido';
         $this->latencia_ms = isset($data['latencia_ms']) ? (int)$data['latencia_ms'] : null;
         $this->detalles = $data['detalles'] ?? null;

@@ -49,7 +49,7 @@
             <h2 class="h5 mb-1">Último escaneo</h2>
             <p id="lastScanAt" class="text-secondary mb-0">Todavía no hay registros de monitoreo.</p>
         </div>
-        <a href="/monitoreo" class="btn btn-sm btn-outline-secondary align-self-center">Ver historial</a>
+        <a href="<?= $baseUrl ?>/monitoreo" class="btn btn-sm btn-outline-secondary align-self-center">Ver historial</a>
     </div>
 </section>
 <?php $script = 'dashboard.js'; require __DIR__ . '/layout/footer.php'; ?>
